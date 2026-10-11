@@ -62,6 +62,8 @@ func handle_key_event(event: InputEvent) -> void:
 				_terminal.navigate_history_up()
 			Key.KEY_DOWN:
 				_terminal.navigate_history_down()
+			Key.KEY_F7:
+				Screenshot.take_screenshot()
 			_:
 				_insert_printable_character(event)
 

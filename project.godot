@@ -21,6 +21,12 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 fs="*uid://c3trm04b37vgv"
 Terminal="*uid://jyoljv246tfx"
 Loading="*uid://ckypo4jsjuepe"
+Screenshot="*uid://dxtj5qjcwoufp"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
 
 [editor]
 
