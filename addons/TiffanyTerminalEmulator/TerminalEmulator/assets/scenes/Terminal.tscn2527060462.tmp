@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://brxeuebe2s033"]
+
+[ext_resource type="Script" uid="uid://imc5q8jsr4ck" path="res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/scripts/terminal.gd" id="1_4gedj"]
+[ext_resource type="FontFile" uid="uid://bh6cny8w5wurc" path="res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/fonts/NotoSansMono-Regular.ttf" id="2_1jh0l"]
+
+[node name="Terminal" type="PanelContainer" unique_id=2035477511]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_4gedj")
+font_file = ExtResource("2_1jh0l")
+font_size = null
+default_text_color = null
+prompt_color = null
+primary_prompt_text = null
+account = null
+continuation_prompt_text = null
+selection_color = null
+caret_blink_interval = null
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1693559665]
+layout_mode = 2
+
+[node name="Display" type="PanelContainer" parent="ScrollContainer" unique_id=1368396162]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 2
+mouse_filter = 1
+
+[node name="PopupMenu" type="PopupMenu" parent="." unique_id=882681719]
+oversampling_override = 1.0
+
+[connection signal="tree_exiting" from="." to="." method="_on_tree_exiting"]
+[connection signal="resized" from="ScrollContainer" to="." method="_on_scroll_container_resized"]
+[connection signal="draw" from="ScrollContainer/Display" to="." method="_on_display_draw"]
+[connection signal="focus_entered" from="ScrollContainer/Display" to="." method="_on_display_focus_entered"]
+[connection signal="focus_exited" from="ScrollContainer/Display" to="." method="_on_display_focus_exited"]
+[connection signal="gui_input" from="ScrollContainer/Display" to="." method="_on_display_gui_input"]

@@ -130,6 +130,7 @@ func run_command(profile: String, tty_number: int, command : String):
 	var error = await run_application(profile, tty_number, split_command[0], split_command.slice(1))
 	return error
 
+
 func parse_command(input: String) -> Array:
 	var args: Array = []
 	var current := ""
@@ -140,41 +141,66 @@ func parse_command(input: String) -> Array:
 
 	for i in input.length():
 		var c := input[i]
+
 		if escape:
-			current += c
+			match c:
+				"n":
+					current += "\n"
+				"t":
+					current += "\t"
+				"r":
+					current += "\r"
+				"\\", "\"", "'":
+					current += c
+				" ":
+					current += " "
+				_:
+					# keep unknown escape sequences
+					current += "\\" + c
+
 			escape = false
 			continue
+
 		if c == "\\":
 			escape = true
 			continue
+
 		if in_quotes:
 			if c == quote_char:
 				in_quotes = false
 			else:
 				current += c
 			continue
+
 		if c == '"' or c == "'":
 			in_quotes = true
 			quote_char = c
 			continue
+
 		if c == " ":
 			if current != "":
 				args.append(current)
 				current = ""
 			continue
 		current += c
+
+	if escape:
+		current += "\\"
 	if current != "":
 		args.append(current)
+
+	# Variable expansion.
 	for i in range(args.size()):
 		var s = args[i]
 		if s.begins_with("$"):
-			var v := variables.get(s.substr(1), s)
+			var v = variables.get(s.substr(1), s)
 			if v is Callable:
 				s = str(v.call())
 			else:
 				s = str(v)
 		args[i] = s
 	return args
+
 
 func run_application(profile, tty_number, application_id:String, params:Array):
 	if application_id.contains("/"):

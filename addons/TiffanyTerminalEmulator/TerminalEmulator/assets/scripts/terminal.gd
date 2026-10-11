@@ -32,7 +32,6 @@ var caret_logical_index_x: int = 0
 var max_columns: int = 20
 var max_rows: int = 20
 
-var _commands: TerminalCommands
 var _input_handler: TerminalInput
 
 var _font: Font
@@ -94,8 +93,6 @@ func _ready() -> void:
 	caret.initialize(self)
 	_display_control.add_child(caret)
 
-	_commands = TerminalCommands.new()
-	_commands.initialize(self)
 	Terminal.print_log.connect(_on_terminal_print)
 	#_commands.command_finished.connect(_on_command_finished)
 
@@ -167,7 +164,8 @@ func update_caret_position() -> void:
 
 
 func input_newline() -> void:
-	_create_new_line_with_prompt(false)
+	_create_new_logical_line()
+	recreate_display_lines_since_last_input_only()
 
 
 func run_command() -> void:
@@ -266,59 +264,6 @@ func navigate_history_down() -> void:
 		_clear_input()
 		_insert_text_at_caret(retrieved_command)
 		caret_logical_index_x = get_active_logical_line().length()
-
-
-func invoke_autocompletion() -> void:
-	var line: TerminalLogicalLine = get_active_logical_line()
-	var prompt_len: int = get_prompt_length()
-	var original_input_text: String = line.get_text(prompt_len)
-	var original_caret_pos_x: int = caret_logical_index_x
-
-	if caret_logical_index_x <= prompt_len:
-		return
-
-	# Extract text from end of prompt to caret (ignore right side).
-	var left_text: String = original_input_text.substr(0, caret_logical_index_x - prompt_len)
-	left_text = left_text.strip_edges(true, false)
-
-	# Find the start of the current word.
-	var is_preceded_by_other_words: bool = false
-	var word_start_idx: int = 0
-	for i in range(left_text.length() - 1, -1, -1):
-		var ch: String = left_text[i]
-		if ch == " " or ch == "\t":
-			word_start_idx = i + 1
-			is_preceded_by_other_words = true
-			break
-
-	var current_word: String = left_text.substr(word_start_idx)
-
-	# Only autocomplete the first word (the command name); more advanced autocompletion can be added
-	# by calling custom command-specific methods from the 'TerminalCommands' class.
-	if is_preceded_by_other_words:
-		return
-
-	var commands: Array = _commands.get_available_commands()
-	var matches: Array = []
-
-	for command: String in commands:
-		if command.begins_with(current_word):
-			matches.append(command)
-
-	if matches.is_empty():
-		# No matches: can't autocomplete.
-		pass
-	elif matches.size() == 1:
-		# Single match: autocomplete inline.
-		_autocomplete(current_word, matches[0])
-	else:
-		# Multiple matches: print a list.
-		print_on_terminal(", ".join(matches), default_text_color)
-		_create_new_line_with_prompt()
-		_insert_text_at_caret(original_input_text)
-		caret_logical_index_x = original_caret_pos_x
-		update_caret_position()
-
 
 func clear_selection() -> void:
 	_is_selecting = false
@@ -476,7 +421,16 @@ func _write_prompt(is_primary_prompt: bool) -> void:
 
 
 func _insert_text_at_caret(text: String, color: Color = default_text_color) -> void:
+	var idx: int
 	for ch: String in text:
+		idx += 1
+		if ch == "\n":
+			insert_char_at_caret("")
+			input_newline() 
+			continue
+		if ch == "\t":
+			_insert_text_at_caret("    ")
+			continue
 		insert_char_at_caret(ch, color, false)
 	recreate_display_lines_since_last_input_only()
 
@@ -734,7 +688,8 @@ func _on_display_draw() -> void:
 				(d_line_idx * _font_height) + _font.get_ascent(font_size)
 			)
 			_display_control.draw_rect(Rect2(pos.x, 0, _font_width, _font_height), c["highlight"])
-			_display_control.draw_char(_font, pos, c["char"], font_size, c["color"])
+			if c["char"]:
+				_display_control.draw_char(_font, pos, c["char"], font_size, c["color"])
 
 		d_line_idx += 1
 	update_caret_position()

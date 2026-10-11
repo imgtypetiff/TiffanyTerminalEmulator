@@ -19,7 +19,7 @@ func handle_key_event(event: InputEvent) -> void:
 				Key.KEY_ENTER, Key.KEY_KP_ENTER:
 					if event.is_shift_pressed():
 						# Handle "Shift + Enter": insert a newline without submitting.
-						_terminal.input_newline()
+						_terminal._create_new_line_with_prompt(false)
 						return
 				Key.KEY_LEFT:
 					if event.is_ctrl_pressed() or event.is_alt_pressed():
@@ -62,8 +62,6 @@ func handle_key_event(event: InputEvent) -> void:
 				_terminal.navigate_history_up()
 			Key.KEY_DOWN:
 				_terminal.navigate_history_down()
-			Key.KEY_TAB:
-				_terminal.invoke_autocompletion()
 			_:
 				_insert_printable_character(event)
 
