@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Terminal Emulator"
+config/description="Terminal emulator starter kit."
+run/main_scene="uid://brxeuebe2s033"
+config/use_custom_user_dir=true
+config/features=PackedStringArray("4.6", "GL Compatibility")
+
+[autoload]
+
+fs="*uid://c3trm04b37vgv"
+Terminal="*uid://jyoljv246tfx"
+Loading="*uid://ckypo4jsjuepe"
+
+[editor]
+
+export/convert_text_resources_to_binary=false
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/TiffanyTerminalEmulator/FileSystemEmulator/plugin.cfg", "res://addons/TiffanyTerminalEmulator/TerminalEmulator/plugin.cfg")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

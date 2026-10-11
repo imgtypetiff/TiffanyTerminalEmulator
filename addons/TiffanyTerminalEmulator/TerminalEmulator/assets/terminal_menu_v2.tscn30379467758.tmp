@@ -1,0 +1,114 @@
+[gd_scene format=3 uid="uid://caf0fbmjv48ob"]
+
+[ext_resource type="Script" uid="uid://bp7yacx5gmej4" path="res://addons/GodotTerminalButByTiffany/assets/terminal_menu.gd" id="1_fhhba"]
+[ext_resource type="Script" uid="uid://dgq0763dcqol1" path="res://addons/GodotTerminalButByTiffany/assets/autologin.gd" id="2_xw88s"]
+
+[sub_resource type="FontFile" id="FontFile_bj1gk"]
+cache/0/variation_coordinates = {}
+cache/0/face_index = 0
+cache/0/embolden = 0.0
+cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
+cache/0/spacing_top = 0
+cache/0/spacing_bottom = 0
+cache/0/spacing_space = 0
+cache/0/spacing_glyph = 0
+cache/0/baseline_offset = 0.0
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+cache/0/14/0/ascent = 0.0
+cache/0/14/0/descent = 0.0
+cache/0/14/0/underline_position = 0.0
+cache/0/14/0/underline_thickness = 0.0
+cache/0/14/0/scale = 1.0
+
+[sub_resource type="Theme" id="Theme_bj1gk"]
+default_font = SubResource("FontFile_bj1gk")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kcb4n"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bj1gk"]
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+
+[sub_resource type="GDScript" id="GDScript_6h83f"]
+script/source = "extends TextEdit
+@onready var text_edit = self
+var PREFIX = \"\"
+var log
+
+func _ready():
+	text_edit.text = PREFIX
+	text_edit.set_caret_column(PREFIX.length())
+
+func _on_text_edit_text_changed(new_text: String = \"\"):
+	if not text_edit.text.begins_with(PREFIX):
+		var cursor := text_edit.get_caret_column()
+		text_edit.text = PREFIX
+		text_edit.set_caret_column(max(cursor, PREFIX.length()))
+
+func _input(event):
+	if text_edit.get_caret_column() < PREFIX.length():
+		text_edit.set_caret_column(PREFIX.length())
+
+func _gui_input(event: InputEvent) -> void:
+	if text_edit.get_caret_column() < PREFIX.length():
+		text_edit.set_caret_column(PREFIX.length())
+
+func add(statement):
+	text += statement
+	text_edit.set_caret_column(text.length())
+"
+
+[node name="TerminalMenu" type="Control" unique_id=917503826]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_bj1gk")
+script = ExtResource("1_fhhba")
+menuOpenInputAxis = "toggle_terminal_menu"
+menuUpAxis = "terminal_up"
+menuDownAxis = "terminal_down"
+menuClearAxis = "terminal_clear"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=206490415]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=1752248051]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="TextEdit" parent="VBoxContainer/ScrollContainer" unique_id=250962370]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+editable = false
+scroll_fit_content_height = true
+
+[node name="TerminalInputContainer" type="PanelContainer" parent="VBoxContainer" unique_id=1293612279]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="TerminalInput" type="TextEdit" parent="VBoxContainer/TerminalInputContainer" unique_id=188809538]
+layout_mode = 2
+theme_override_styles/focus = SubResource("StyleBoxEmpty_kcb4n")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_bj1gk")
+placeholder_text = "Command..."
+backspace_deletes_composite_character_enabled = true
+caret_blink = true
+script = SubResource("GDScript_6h83f")
+
+[node name="Autologin" type="Node" parent="." unique_id=1795960653]
+script = ExtResource("2_xw88s")
+
+[connection signal="text_changed" from="VBoxContainer/TerminalInputContainer/TerminalInput" to="." method="_on_text_edit_text_changed"]
+[connection signal="text_changed" from="VBoxContainer/TerminalInputContainer/TerminalInput" to="VBoxContainer/TerminalInputContainer/TerminalInput" method="_on_text_edit_text_changed"]

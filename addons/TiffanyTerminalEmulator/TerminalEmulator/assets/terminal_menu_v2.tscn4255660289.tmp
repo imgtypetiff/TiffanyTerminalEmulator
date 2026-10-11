@@ -1,0 +1,222 @@
+[gd_scene format=3 uid="uid://caf0fbmjv48ob"]
+
+[ext_resource type="Script" uid="uid://bxjvpq0qokbhj" path="res://addons/Unix-Like OS by Tiffany/Tiffany's Terminal/assets/terminal_menu_v2.gd" id="1_fhhba"]
+[ext_resource type="FontFile" uid="uid://c50g2oqwssa1x" path="res://tiffanytheme/MS Sans Serif.ttf" id="2_chd2b"]
+[ext_resource type="Script" uid="uid://dgq0763dcqol1" path="res://addons/Unix-Like OS by Tiffany/Tiffany's Terminal/assets/autologin.gd" id="2_xw88s"]
+[ext_resource type="Script" uid="uid://dyrq066cvp4gn" path="res://addons/Unix-Like OS by Tiffany/Tiffany's Terminal/assets/terminal_input_container.gd" id="5_m3s1d"]
+
+[sub_resource type="FontFile" id="FontFile_bj1gk"]
+cache/0/variation_coordinates = {}
+cache/0/face_index = 0
+cache/0/embolden = 0.0
+cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
+cache/0/spacing_top = 0
+cache/0/spacing_bottom = 0
+cache/0/spacing_space = 0
+cache/0/spacing_glyph = 0
+cache/0/baseline_offset = 0.0
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+cache/0/14/0/ascent = 0.0
+cache/0/14/0/descent = 0.0
+cache/0/14/0/underline_position = 0.0
+cache/0/14/0/underline_thickness = 0.0
+cache/0/14/0/scale = 1.0
+
+[sub_resource type="Theme" id="Theme_bj1gk"]
+default_font = SubResource("FontFile_bj1gk")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ohyfh"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kcb4n"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bj1gk"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="GDScript" id="GDScript_6h83f"]
+script/source = "extends TextEdit
+
+@onready var text_edit = self
+var PREFIX := \"I AM AWESOME \\n YES \\n mmmh mmh\"
+
+var _prefix_lines: PackedStringArray
+
+func _ready():
+	_prefix_lines = PREFIX.split(\"\\n\", false)
+	if _prefix_lines.is_empty():
+		_prefix_lines.append(\"\")
+
+	text_edit.text = PREFIX
+	_set_caret_to_end_of_prefix()
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		var caret_in_prefix = _is_inside_prefix(
+			get_caret_line(), get_caret_column()
+		)
+
+		var selection_hits_prefix = _selection_touches_prefix()
+
+		if event.keycode == KEY_BACKSPACE || event.keycode == KEY_DELETE:
+			var line := get_caret_line()
+			var col := get_caret_column()
+
+			# If we're exactly at the prefix boundary → block
+			if line == _prefix_lines.size() - 1 and col == _prefix_lines[-1].length():
+				accept_event()
+				return
+
+			# If inside prefix → block
+			if _is_inside_prefix(line, col) or _selection_touches_prefix():
+				accept_event()
+				return
+
+		# --- BLOCK typing characters ---
+		if event.unicode != 0:
+			if caret_in_prefix or selection_hits_prefix:
+				accept_event()
+				return
+
+		# --- ENTER: only block if caret is in prefix ---
+		if event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+			if caret_in_prefix:
+				accept_event()
+				return
+				
+		if event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+			_handle_enter(event)
+	if not (event is InputEventMouse) and not has_selection():
+		_clamp_caret()
+
+func _clamp_caret():
+	# Allow caret anywhere while selecting
+	if has_selection():
+		return
+
+	# Otherwise enforce prefix lock
+	if _is_inside_prefix(get_caret_line(), get_caret_column()):
+		_set_caret_to_end_of_prefix()
+
+func _is_inside_prefix(line: int, col: int) -> bool:
+	if line < _prefix_lines.size() - 1:
+		return true
+	
+	if line == _prefix_lines.size() - 1:
+		return col < _prefix_lines[-1].length()
+	
+	return false
+
+func _selection_touches_prefix() -> bool:
+	if not has_selection():
+		return false
+
+	var from_line := get_selection_from_line()
+	var from_col := get_selection_from_column()
+	var to_line := get_selection_to_line()
+	var to_col := get_selection_to_column()
+
+	# Normalize order
+	if (to_line < from_line) or (to_line == from_line and to_col < from_col):
+		var tl = from_line
+		var tc = from_col
+		from_line = to_line
+		from_col = to_col
+		to_line = tl
+		to_col = tc
+
+	# If selection starts inside prefix → blocked
+	if _is_inside_prefix(from_line, from_col):
+		return true
+
+	return false
+
+func _set_caret_to_end_of_prefix():
+	var last_line := _prefix_lines.size() - 1
+	var last_col := _prefix_lines[last_line].length()
+	set_caret_line(last_line)
+	set_caret_column(last_col)
+
+func add(statement: String):
+	text += statement
+	set_caret_line(get_line_count() - 1)
+	set_caret_column(get_line(get_line_count() - 1).length())
+
+func _on_text_changed():
+	if not text.begins_with(PREFIX):
+		var user_text := text.substr(PREFIX.length())
+		text = PREFIX + user_text
+		_set_caret_to_end_of_prefix()
+
+func _handle_enter(event: InputEventKey) -> void:
+	# Let Godot insert newline first
+	call_deferred(\"_after_enter\")
+
+func _after_enter():
+	# Let Godot finish inserting newline first
+	await get_tree().process_frame
+
+	var line := get_caret_line()
+	var col := get_caret_column()
+
+	# If somehow inside prefix, fix it
+	if _is_inside_prefix(line, col):
+		_set_caret_to_end_of_prefix()
+	else:
+		# Force caret refresh (THIS fixes invisibility)
+		set_caret_line(line)
+		set_caret_column(col)
+
+	# Optional: ensure visibility
+	scroll_vertical = get_caret_line()
+"
+
+[node name="TerminalMenu" type="Control" unique_id=917503826]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_bj1gk")
+script = ExtResource("1_fhhba")
+menuOpenInputAxis = "toggle_terminal_menu"
+menuUpAxis = "terminal_up"
+menuDownAxis = "terminal_down"
+menuClearAxis = "terminal_clear"
+
+[node name="Autologin" type="Node" parent="." unique_id=1795960653]
+script = ExtResource("2_xw88s")
+
+[node name="TerminalInputContainer" type="PanelContainer" parent="." unique_id=1293612279]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_m3s1d")
+
+[node name="TerminalInput" type="TextEdit" parent="TerminalInputContainer" unique_id=188809538]
+layout_mode = 2
+theme_override_colors/caret_color = Color(1, 1, 1, 1)
+theme_override_colors/caret_background_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_readonly_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_chd2b")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ohyfh")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_kcb4n")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_bj1gk")
+placeholder_text = "Command..."
+backspace_deletes_composite_character_enabled = true
+wrap_mode = 1
+caret_type = 1
+caret_blink = true
+script = SubResource("GDScript_6h83f")
+
+[connection signal="text_changed" from="TerminalInputContainer/TerminalInput" to="TerminalInputContainer/TerminalInput" method="_on_text_changed"]
+[connection signal="text_changed" from="TerminalInputContainer/TerminalInput" to="TerminalInputContainer/TerminalInput" method="_on_text_edit_text_changed"]

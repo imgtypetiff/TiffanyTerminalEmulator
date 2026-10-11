@@ -1,0 +1,214 @@
+[gd_scene format=3 uid="uid://bhajp3juuqhav"]
+
+[ext_resource type="Script" uid="uid://xdtifvku5lxk" path="res://addons/TiffanyDesktop/tiffwindow/tiffwindow.gd" id="1_ssmps"]
+[ext_resource type="Theme" uid="uid://dx2apft2xh7ba" path="res://addons/TiffanyDesktop/theme assets/darktheme/darktheme.tres" id="2_q63sf"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_cyj1u"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mofc4"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_lfkk0"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ej3bi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1oqmc"]
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_w52x6"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_cyhq6"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xuukm"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_b4d5r"]
+
+[node name="ControlNodeWindowTemplate" type="Control" unique_id=619043131]
+custom_minimum_size = Vector2(300, 300)
+layout_mode = 3
+anchor_left = 0.36600003
+anchor_top = 0.26900002
+anchor_right = 0.62700003
+anchor_bottom = 0.731
+offset_left = 0.36798096
+offset_top = -0.31201172
+offset_right = -0.3040161
+offset_bottom = 0.3119812
+size_flags_horizontal = 0
+size_flags_vertical = 0
+script = ExtResource("1_ssmps")
+popup_rect = Rect2(422, 174, 300, 300)
+desktop_mode = true
+
+[node name="Panel" type="Panel" parent="." unique_id=682554841 groups=["Window"]]
+custom_minimum_size = Vector2(300, 300)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_q63sf")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1103694178 groups=["Window"]]
+custom_minimum_size = Vector2(300, 300)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="Panel" parent="VBoxContainer" unique_id=1243556581]
+custom_minimum_size = Vector2(20, 32)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_cyj1u")
+
+[node name="WindowName" type="Label" parent="VBoxContainer/TopBar" unique_id=1265102824]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.5
+anchor_right = 0.66300005
+anchor_bottom = 0.5
+offset_left = 5.5
+offset_top = -11.5
+offset_right = 0.099990845
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "hello"
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/TopBar" unique_id=1936073011]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0940001
+offset_bottom = -0.008003235
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_q63sf")
+theme_override_constants/separation = 0
+
+[node name="TopPanel" type="PanelContainer" parent="VBoxContainer/TopBar/HBoxContainer" unique_id=1813018263]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+mouse_default_cursor_shape = 6
+theme_override_styles/panel = SubResource("StyleBoxEmpty_mofc4")
+
+[node name="-" type="Button" parent="VBoxContainer/TopBar/HBoxContainer" unique_id=37764483]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+text = "-"
+
+[node name="expand" type="Button" parent="VBoxContainer/TopBar/HBoxContainer" unique_id=1621654478]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+text = "□"
+
+[node name="X" type="Button" parent="VBoxContainer/TopBar/HBoxContainer" unique_id=1679946804]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+text = "X"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer" unique_id=1495159941]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="OptionsBar" type="HBoxContainer" parent="VBoxContainer/MarginContainer" unique_id=482129279]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer" unique_id=2127956062]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="BorderLeft" type="Panel" parent="VBoxContainer/HBoxContainer2" unique_id=701608539]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+mouse_default_cursor_shape = 10
+theme_override_styles/panel = SubResource("StyleBoxEmpty_lfkk0")
+
+[node name="CenterPanel" type="Panel" parent="VBoxContainer/HBoxContainer2" unique_id=1549943804]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_ej3bi")
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer2/CenterPanel" unique_id=86189380]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 5
+
+[node name="ContentPlaceholder" type="Panel" parent="VBoxContainer/HBoxContainer2/CenterPanel/MarginContainer" unique_id=429604453]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_1oqmc")
+
+[node name="BorderRight" type="Panel" parent="VBoxContainer/HBoxContainer2" unique_id=1384205004]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+mouse_default_cursor_shape = 10
+theme_override_styles/panel = SubResource("StyleBoxEmpty_w52x6")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=599502335]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="CornerBotLeft" type="Panel" parent="VBoxContainer/HBoxContainer" unique_id=2136775933]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+mouse_default_cursor_shape = 11
+theme_override_styles/panel = SubResource("StyleBoxEmpty_cyhq6")
+
+[node name="BorderBot" type="Panel" parent="VBoxContainer/HBoxContainer" unique_id=1822313409]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 9
+theme_override_styles/panel = SubResource("StyleBoxEmpty_xuukm")
+
+[node name="CornerBotRight" type="Panel" parent="VBoxContainer/HBoxContainer" unique_id=404584999]
+custom_minimum_size = Vector2(5, 5)
+layout_mode = 2
+mouse_default_cursor_shape = 12
+theme_override_styles/panel = SubResource("StyleBoxEmpty_b4d5r")
+
+[node name="Content_dummy" type="ColorRect" parent="." unique_id=1737129629 groups=["Window"]]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 37.0
+offset_right = 290.0
+offset_bottom = 290.0
+mouse_filter = 1
+color = Color(1, 1, 1, 0)
+
+[connection signal="child_entered_tree" from="." to="." method="_on_child_entered_tree"]
+[connection signal="child_order_changed" from="." to="." method="_on_child_order_changed"]
+[connection signal="focus_exited" from="." to="." method="_on_focus_exited"]
+[connection signal="item_rect_changed" from="." to="." method="_on_item_rect_changed"]
+[connection signal="gui_input" from="VBoxContainer/TopBar/HBoxContainer/TopPanel" to="." method="_on_top_panel_gui_input"]
+[connection signal="pressed" from="VBoxContainer/TopBar/HBoxContainer/-" to="." method="minimize"]
+[connection signal="pressed" from="VBoxContainer/TopBar/HBoxContainer/expand" to="." method="expand"]
+[connection signal="pressed" from="VBoxContainer/TopBar/HBoxContainer/X" to="." method="close"]
+[connection signal="gui_input" from="VBoxContainer/HBoxContainer2/BorderLeft" to="." method="_on_border_left_gui_input"]
+[connection signal="gui_input" from="VBoxContainer/HBoxContainer2/BorderRight" to="." method="_on_border_right_gui_input"]
+[connection signal="gui_input" from="VBoxContainer/HBoxContainer/CornerBotLeft" to="." method="_on_corner_bot_left_gui_input"]
+[connection signal="gui_input" from="VBoxContainer/HBoxContainer/BorderBot" to="." method="_on_border_bot_gui_input"]
+[connection signal="gui_input" from="VBoxContainer/HBoxContainer/CornerBotRight" to="." method="_on_corner_bot_right_gui_input"]

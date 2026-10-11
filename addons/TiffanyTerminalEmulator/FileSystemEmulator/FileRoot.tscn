@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c3trm04b37vgv"]
+
+[ext_resource type="Script" uid="uid://ol6h85t8seyy" path="res://addons/TiffanyTerminalEmulator/FileSystemEmulator/Root.gd" id="1_6h5jb"]
+
+[node name="FileRoot" type="Node" unique_id=1689994218]
+script = ExtResource("1_6h5jb")

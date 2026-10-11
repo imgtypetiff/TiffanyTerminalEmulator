@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://ch08jhcmv1ow6"]
+
+[ext_resource type="PackedScene" uid="uid://bhajp3juuqhav" path="res://addons/TiffanyDesktop/tiffwindow/tiffwindow.tscn" id="1_6yhhn"]
+
+[sub_resource type="GDScript" id="GDScript_rh5jq"]
+resource_name = "button"
+script/source = "extends Node
+
+var scene: PackedScene = preload(\"res://addons/TifunixSystems/TifunixTerminal/assets/scenes/Terminal.tscn\")
+@onready var window: tiffwindow =  $\"../ControlNodeWindowTemplate\"
+
+func _ready() -> void:
+	await window.__is_ready == true
+	window.add_child(scene.instantiate())
+	queue_free()
+"
+
+[node name="Control" type="Control" unique_id=750867464]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ControlNodeWindowTemplate" parent="." unique_id=619043131 instance=ExtResource("1_6yhhn")]
+layout_mode = 1
+anchor_left = 0.365
+anchor_top = 0.27
+anchor_right = 0.62600005
+offset_left = 0.519989
+offset_top = 0.039993286
+offset_right = -0.15203857
+offset_bottom = 1.3119812
+popup_rect = Rect2(421, 175, 300, 300)
+
+[node name="Button" type="Node" parent="." unique_id=1820202943]
+script = SubResource("GDScript_rh5jq")
