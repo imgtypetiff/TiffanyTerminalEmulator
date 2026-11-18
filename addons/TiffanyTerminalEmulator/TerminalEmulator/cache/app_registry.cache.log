@@ -1,5 +1,9 @@
+res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/cat.gd
+res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/cat.gd.uid
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/cd.gd
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/cd.gd.uid
+res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/check.gd
+res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/check.gd.uid
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/echo.gd
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/echo.gd.uid
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/ls.gd
@@ -8,5 +12,3 @@ res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/ping.g
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/ping.gd.uid
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/quit.gd
 res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/quit.gd.uid
-res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/radar.gd
-res://addons/TiffanyTerminalEmulator/TerminalEmulator/assets/applications/radar.gd.uid

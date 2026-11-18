@@ -23,6 +23,9 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	if _terminal == null:
+		queue_free()
+		return
 	if _terminal.display_has_focus():
 		if visible or is_blinking_allowed == false:
 			draw_rect(Rect2(Vector2.ZERO, Vector2(font_width, font_height)), color)

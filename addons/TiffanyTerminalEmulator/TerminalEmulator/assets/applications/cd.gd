@@ -14,7 +14,7 @@ func run(terminal : Terminal, params: Array, tty_number: int, profile: String):
 	var temp: Array = current_dir.get_children()
 	var fsnodes: Dictionary[String, FSNode]
 	for node in temp:
-		if node is FSNode:
+		if node is FSDirectoryNode:
 			fsnodes[node.fs_name] = node
 	if fsnodes.keys().has(params[0]):
 		get_session().current_directory = fsnodes[params[0]].get_path()

@@ -14,12 +14,10 @@ var variables := {
 
 var folder_path: String = self.get_script().resource_path.get_base_dir().get_base_dir().get_base_dir()
 var AppRegistry: Dictionary =  preload("res://addons/TiffanyTerminalEmulator/TerminalEmulator/registries/app_registry.gd").new().APPLICATIONS
+var hostname: String = "TiffanysLaptop"
 
 var ttys: Dictionary[int, TTYSession] = {}: 
 	set(v):
-		for t in range(ttys.size()):
-			if v[t] != ttys[t]:
-				print(v[t], ", ", ttys[t])
 		ttys = v
 
 class Account:
@@ -57,19 +55,50 @@ enum privileges{
 func _ready() -> void:
 	# set up folders
 	DirAccess.make_dir_recursive_absolute("user://FILESYSTEM/usr/bin")
-	var usr: FSDirectoryNode = string_to_fsnode("/usr/bin/", null)
-	# set up fake files
-	for key in AppRegistry.keys():
-		var uid = AppRegistry[key]
-		var path = ResourceUID.uid_to_path(uid)
-		var file: FSFileNode = FSFileNode.new()
-		file.fs_name = key
-		file.real_path = path
-		usr.add_child(file)
-	
-	print("FILESYSTEM folder: ", ProjectSettings.globalize_path("user://FILESYSTEM"))
-	var system_password =  profiles["root"][0]
-	use_tty(0, self, "root", system_password)
+	DirAccess.make_dir_recursive_absolute("user://FILESYSTEM/etc")
+	DirAccess.make_dir_recursive_absolute("user://FILESYSTEM/home/")
+	for user in accounts.keys():
+		if user == "root":
+			continue
+		var home: String = "user://FILESYSTEM/home/".path_join(user)
+		DirAccess.make_dir_recursive_absolute(home)
+		if !FileAccess.file_exists(home.path_join(".rc")):
+			var f = FileAccess.open(home.path_join(".rc"), FileAccess.WRITE)
+			if f:
+				f.close()
+			else:
+				print(".rc was not made.")
+				pass
+		var folders: Array = ["Documents", "Downloads", "Desktop", "Music", "Pictures", "Projects", "Public", "Templates", "Videos"]
+		for folder in folders:
+			DirAccess.make_dir_recursive_absolute(home.path_join(folder))
+
+	if !FileAccess.file_exists("user://FILESYSTEM/etc/hostname") && FileAccess.get_file_as_string("user://FILESYSTEM/etc/hostname").is_empty():
+		fs.root.refresh()
+		var f = FileAccess.open("user://FILESYSTEM/etc/hostname", FileAccess.WRITE)
+		f.store_string(hostname)
+		if f:
+			f.close()
+	else:
+		var f = FileAccess.open("user://FILESYSTEM/etc/hostname", FileAccess.READ)
+		hostname = f.get_as_text()
+		if f:
+			f.close()
+
+	if !Engine.is_editor_hint():
+		var usr: FSDirectoryNode = string_to_fsnode("/usr/bin/", null)
+		# set up fake files
+		for key in AppRegistry.keys():
+			var uid = AppRegistry[key]
+			var path = ResourceUID.uid_to_path(uid)
+			var file: FSFileNode = FSFileNode.new()
+			file.fs_name = key
+			file.real_path = path
+			usr.add_child(file)
+		
+		print("FILESYSTEM folder: ", ProjectSettings.globalize_path("user://FILESYSTEM"))
+		var system_password =  profiles["root"][0]
+		use_tty(0, self, "root", system_password)
 
 
 func path_search(app: String):
@@ -90,8 +119,6 @@ func path_search(app: String):
 								if app == file_name.get_basename():
 									return p.path_join(file_name)
 				file_name = dir.get_next()
-		else:
-			print("An error occurred when trying to access the path.")
 
 
 func get_cam_id():
@@ -205,25 +232,26 @@ func parse_command(input: String) -> Array:
 func run_application(profile, tty_number, application_id:String, params:Array):
 	if application_id.contains("/"):
 		var a = string_to_fsnode(application_id, ttys[tty_number])
-		if a.real_path.begins_with("res://"):
-			var command = load(ResourceUID.path_to_uid(a.real_path)).new()
+		if a != null:
+			if a.real_path.begins_with("res://"):
+				var command = load(ResourceUID.path_to_uid(a.real_path)).new()
 
-			if command is TerminalApplication:
+				if command is TerminalApplication:
 
-				command._profile = profile
-				command._terminal = self
-				command._tty_number = tty_number
+					command._profile = profile
+					command._terminal = self
+					command._tty_number = tty_number
 
-				get_tree().current_scene.add_child(command)
+					get_tree().current_scene.add_child(command)
 
-				await command.run(
-					self,
-					params,
-					tty_number,
-					profile
-				)
+					await command.run(
+						self,
+						params,
+						tty_number,
+						profile
+					)
 
-				return 0
+					return 0
 
 	
 	if AppRegistry.has(application_id):
@@ -250,7 +278,6 @@ func run_application(profile, tty_number, application_id:String, params:Array):
 	var s = path_search(application_id)
 
 	if s is String and FileAccess.file_exists(s):
-		print(s)
 		return 0
 
 	else:
@@ -300,22 +327,34 @@ func use_tty(tty_number:int, terminal_interface:Node, profile:String = "guest", 
 	if ttys.has(tty_number):
 
 		var existing:TTYSession = ttys[tty_number]
-
 		if existing.node == terminal_interface:
 			if existing.logged_in:
 				return {"tty": tty_number, "profile": existing.profile, "file": existing.current_directory}
 
-		if !existing.node == terminal_interface:
+		var placeholder: bool = true
+
+		for t in ttys.keys():
+			var value: TTYSession = ttys[t]
+			if value.node == terminal_interface:
+				tty_number = t
+				placeholder = false
+				if value.logged_in:
+					tty.emit()
+					return {"tty": tty_number, "profile": existing.profile, "file": existing.current_directory}
+
+		if !existing.node == terminal_interface && placeholder:
 			printerr("TTY ", tty_number, " already in use.")
 
 			tty_number = get_next_free_tty()
 
 	if !profiles.has(profile):
+		tty.emit()
 		return {"tty": tty_number, "profile": null, "file": fs.root.get_path()}
 		
 	if !authenticate(profile, password):
 		var guest_session = _create_session(tty_number, terminal_interface, "guest", false)
 		guest_session.active = false
+		tty.emit()
 		return {"tty": tty_number, "profile": null, "file": guest_session.current_directory}
 		
 	var session = _create_session(tty_number, terminal_interface, profile)
@@ -323,6 +362,7 @@ func use_tty(tty_number:int, terminal_interface:Node, profile:String = "guest", 
 	if "tty_session" in terminal_interface:
 		terminal_interface.tty_session = session
 	print("TTY ", tty_number, " LOGGED IN AS ", profile)
+	tty.emit()
 	return {"tty": tty_number, "profile": profile, "file": session.current_directory}
 
 func _create_session(tty_number:int, terminal_interface:Node, profile:String, logged_in: bool = true) -> TTYSession:
@@ -335,7 +375,6 @@ func _create_session(tty_number:int, terminal_interface:Node, profile:String, lo
 		fs.root.get_path(),
 		logged_in
 	)
-	print(get_fs_path(fs.root.get_children()[0]))
 	session.environment.set_var(
 		"camid",
 		Callable(self, "get_cam_id")
@@ -375,7 +414,7 @@ func authenticate(profile:String, password:String) -> bool:
 
 func get_next_free_tty() -> int:
 	var id := 0
-	while ttys.has(id):
+	while ttys.keys().has(id):
 		id += 1
 	return id
 
@@ -432,17 +471,16 @@ func string_to_fsnode(string_path: String, session: TTYSession) -> FSNode:
 
 		for child in current_dir.get_children():
 			if child is FSNode and child.fs_name == n:
+
 				found_node = child
 				break
 
 		if found_node == null:
-			print("Did not find node")
 			return null
 
 		# Intermediate path components must be directories.
 		if i < string_array.size() - 1:
 			if not found_node is FSDirectoryNode:
-				print("Files are in path")
 				return null
 
 			current_dir = found_node

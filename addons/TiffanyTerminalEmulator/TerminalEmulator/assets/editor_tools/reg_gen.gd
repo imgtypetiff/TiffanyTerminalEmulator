@@ -29,7 +29,6 @@ var files: Array = []
 var file_names = []
 
 func _run():
-	print("hi")
 	DirAccess.make_dir_recursive_absolute(get_root_folder().path_join("registries"))
 	scan_for_files(APP_OUTPUT_PATH,APPS_PATH,"")
 	scan_for_files(FONT_OUTPUT_PATH,FONT_PATH,"")
@@ -89,11 +88,11 @@ func dir_contents(path: String):
 			else:
 				if !file_name.begins_with("."):
 					files.append(path.path_join(file_name))
-					print(path_to_uid(path.path_join(file_name)))
 					# print(path.path_join(file_name))
 			file_name = dir.get_next()
 	else:
 		print("An error occurred when trying to access the path.")
+		pass
 
 func write(lines, path):
 	var gun = FileAccess.open(path, FileAccess.WRITE)

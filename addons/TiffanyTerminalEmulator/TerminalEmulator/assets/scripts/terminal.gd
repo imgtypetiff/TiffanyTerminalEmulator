@@ -43,6 +43,8 @@ var _continuation_prompt_length: int = 0
 
 var _logical_lines: Array[TerminalLogicalLine] = []
 var _display_lines: Array[TerminalDisplayLine] = []
+var _alternate_screen_active: bool = false
+var _primary_screen_state: Dictionary = {}
 var _active_logical_line_idx: int = 0
 var _input_first_logical_line_idx: int = 0
 var _first_active_display_line_idx: int = 0
@@ -73,7 +75,7 @@ var temp: Dictionary = {}
 
 var just_started: bool = true
 
-var window: tiffwindow = null
+var hostname: String
 
 @onready var _scroll_container: ScrollContainer = find_child("ScrollContainer")
 @onready var _display_control: PanelContainer = find_child("Display")
@@ -81,6 +83,7 @@ var window: tiffwindow = null
 
 
 func _ready() -> void:
+	hostname = FileAccess.get_file_as_string("user://FILESYSTEM/etc/hostname").to_lower()
 	tty_variables = Terminal.use_tty(1, self, account, "")
 
 	_rightclick_menu.add_item("Copy", RIGHTCLICK_MENU_ITEMS.ITEM_COPY)
@@ -115,10 +118,10 @@ func _ready() -> void:
 	_display_control.grab_focus()
 	just_started = false
 
+
 func _process(delta: float) -> void:
 	max_columns = int(floor(get_rect().size.x / _font_width))
 	max_rows = int(floor(get_rect().size.y / _font_height))
-	
 
 func is_alive() -> bool:
 	return is_inside_tree() and not is_queued_for_deletion()
@@ -207,6 +210,7 @@ func clear_screen() -> void:
 	_clear_all_lines()
 	_create_new_logical_line()
 
+
 func _on_terminal_print(ttty_number, statement, use_color: bool, color: Color):
 	if ttty_number == tty_variables["tty"]:
 		if use_color:
@@ -214,16 +218,13 @@ func _on_terminal_print(ttty_number, statement, use_color: bool, color: Color):
 		else:
 			print_on_terminal(statement)
 
+
 func print_on_terminal(text: String, color: Color = default_text_color) -> void:
 	_create_new_logical_line()
 	_insert_text_at_caret(text, color)
 
 
-func insert_char_at_caret(
-	character: String,
-	color: Color = default_text_color,
-	should_update: bool = true
-) -> void:
+func insert_char_at_caret(character: String, color: Color = default_text_color, should_update: bool = true) -> void:
 	get_active_logical_line().insert_char(caret_logical_index_x, character, color)
 	caret_logical_index_x += 1
 	if should_update:
@@ -332,15 +333,7 @@ func get_font() -> Font:
 func get_font_size() -> int:
 	return font_size
 
-
-func _setup_environment() -> void:
-	# Just as an example.
-	environment.set_var("PATH", "/usr/bin:/bin")
-	environment.set_var("HOME", "/home/user")
-
-
 func _setup_terminal(should_recreate_display_lines: bool = true) -> void:
-	_setup_environment()
 
 	if font_file == null:
 		push_error("Font file is not assigned.")
@@ -399,7 +392,7 @@ func _write_prompt(is_primary_prompt: bool) -> void:
 		if logged_in:
 			var fin_text = primary_prompt_text.replace("\\W", Terminal.get_fs_path(get_node(tty_session.current_directory)))
 			fin_text = fin_text.replace("\\u", tty_variables["profile"])
-			fin_text = fin_text.replace("\\h", "ship_computer")
+			fin_text = fin_text.replace("\\h", hostname)
 			fin_text = fin_text.replace("\\$", "$")
 			prompt_text = fin_text
 		else:
@@ -756,19 +749,10 @@ func _on_tree_exiting() -> void:
 	if environment != null:
 		environment.free()
 
-func _trigger_callback_tiffwindow_api(_window: tiffwindow):
-	window = _window
-	var option_button = _window.add_option_button()
-	option_button.text = "Font"
-	option_button.flat = true
-	var popup_menu = option_button.get_popup()
-	popup_menu.add_item("Font Size Increase", FONT_BUTTON_MENU_ITEMS.FONT_SIZE_INCREASE)
-	popup_menu.add_item("Font Size Decrease", FONT_BUTTON_MENU_ITEMS.FONT_SIZE_DECREASE)
-	popup_menu.id_pressed.connect(_on_font_menu_pressed)
-	pass
+
+
 
 func _on_font_menu_pressed(id: int) -> void:
-	print(id)
 	match id:
 		FONT_BUTTON_MENU_ITEMS.FONT_SIZE_INCREASE:
 			font_size += 10
@@ -781,23 +765,90 @@ func _on_font_menu_pressed(id: int) -> void:
 			_display_control.queue_redraw()
 		_:
 			push_error("Terminal: Popup menu: Unknown menu item: ", id)
-	print(font_size)
 
 func _input(event):
-	# Check if the event is a left mouse button click
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		
-		# Check if the global mouse position is inside the Control node's rect area
-		var control: Control
-		if window != null:
-			control = window
-		else:
-			control = self
-		if control.get_global_rect().has_point(get_global_mouse_position()):
-			print("Player clicked ON the Control Node!")
+		# Check if the global mouse position is inside the terminal's rect area
+		if self.get_global_rect().has_point(get_global_mouse_position()):
 			_display_control.grab_focus()
-			# Optional: If you want to block the click from passing to 2D objects behind it:
-			# get_viewport().set_input_as_handled() 
 		else:
-			print("Player clicked OFF the Control Node!")
 			_display_control.release_focus()
+
+func _exit_tree() -> void:
+	Terminal.abandon_tty(tty_variables["tty"], self)
+
+func enter_alternate_screen() -> void:
+	if _alternate_screen_active:
+		return
+
+	# Save the current primary screen.
+	_primary_screen_state = {
+		"logical_lines": _logical_lines,
+		"active_logical_line_idx": _active_logical_line_idx,
+		"input_first_logical_line_idx": _input_first_logical_line_idx,
+		"first_active_display_line_idx": _first_active_display_line_idx,
+		"caret_logical_index_x": caret_logical_index_x,
+		"primary_prompt_length": _primary_prompt_length,
+		"continuation_prompt_length": _continuation_prompt_length,
+		"is_selecting": _is_selecting,
+		"selection_anchor_index": _selection_anchor_index,
+		"selection_cursor_index": _selection_cursor_index,
+		"selection_from_index": _selection_from_index,
+		"selection_to_index": _selection_to_index
+	}
+
+	# Discard the primary screen's display lines.
+	# Its logical lines remain intact in the saved state.
+	for line: TerminalDisplayLine in _display_lines:
+		line.free()
+
+	_display_lines.clear()
+
+	# Initialize a fresh alternate screen.
+	_logical_lines = []
+	_active_logical_line_idx = 0
+	_input_first_logical_line_idx = 0
+	_first_active_display_line_idx = 0
+
+	caret_logical_index_x = 0
+	_primary_prompt_length = 0
+	_continuation_prompt_length = 0
+
+	_is_selecting = false
+	clear_selection()
+
+	_alternate_screen_active = true
+
+	_create_new_logical_line()
+	_recreate_display_lines()
+
+
+func leave_alternate_screen() -> void:
+	if not _alternate_screen_active:
+		return
+
+	# Destroy the alternate screen's contents.
+	_clear_all_lines()
+
+	# Restore the original primary screen.
+	_logical_lines = _primary_screen_state["logical_lines"]
+	_active_logical_line_idx = _primary_screen_state["active_logical_line_idx"]
+	_input_first_logical_line_idx = _primary_screen_state["input_first_logical_line_idx"]
+	_first_active_display_line_idx = _primary_screen_state["first_active_display_line_idx"]
+
+	caret_logical_index_x = _primary_screen_state["caret_logical_index_x"]
+	_primary_prompt_length = _primary_screen_state["primary_prompt_length"]
+	_continuation_prompt_length = _primary_screen_state["continuation_prompt_length"]
+
+	_is_selecting = _primary_screen_state["is_selecting"]
+	_selection_anchor_index = _primary_screen_state["selection_anchor_index"]
+	_selection_cursor_index = _primary_screen_state["selection_cursor_index"]
+	_selection_from_index = _primary_screen_state["selection_from_index"]
+	_selection_to_index = _primary_screen_state["selection_to_index"]
+
+	_primary_screen_state.clear()
+	_alternate_screen_active = false
+
+	# Rebuild the visual representation.
+	_recreate_display_lines()
